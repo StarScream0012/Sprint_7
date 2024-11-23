@@ -1,12 +1,12 @@
-import io.qameta.allure.Step;
+import io.qameta.allure.Description;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import model.CreateOrderModel;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,12 +22,12 @@ public class CreateOrderTest {
 
     @Before
     public void setUp() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
+        RestAssured.baseURI = API.baseURI;
 
     }
 
     @Test
-    @Step("Проверка создания заказа")
+    @Description("Проверка создания заказа")
     public void createOrderTest() {
         List color = List.of(colors);
         CreateOrderModel createOrderModel = new CreateOrderModel(color);
@@ -35,7 +35,7 @@ public class CreateOrderTest {
                 .header("Content-type", "application/json")
                 .body(createOrderModel)
                 .when()
-                .post("api/v1/orders");
+                .post(API.createOrderPath);
         response.then().assertThat().body("track", notNullValue())
                 .and()
                 .statusCode(201);

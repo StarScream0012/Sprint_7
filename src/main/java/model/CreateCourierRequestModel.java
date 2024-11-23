@@ -1,3 +1,5 @@
+package model;
+
 public class CreateCourierRequestModel {
       String login;
      String password;

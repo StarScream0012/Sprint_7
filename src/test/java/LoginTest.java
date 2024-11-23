@@ -1,39 +1,37 @@
-import io.qameta.allure.Step;
+import io.qameta.allure.Description;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import org.hamcrest.CoreMatchers;
+import model.CreateCourierRequestModel;
+import model.LoginModel;
+import net.datafaker.Faker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Random;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 public class LoginTest {
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final Random RANDOM = new Random();
     private static String login;
     private static String password;
     private static int id;
-
+    private static Faker faker = new Faker();
 
     @Before
-    @Step("Подготовка для теста. Создание курьера для авторизации")
+    @Description("Подготовка для теста. Создание курьера для авторизации")
     public void setUp() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
-        login = generateRandomString(10);
-        password = generateRandomString(10);
+        RestAssured.baseURI = API.baseURI;
+        login = faker.lorem().word();
+        password = faker.lorem().word();
         CreateCourierRequestModel
-                requestModel = new CreateCourierRequestModel(login, password, generateRandomString(10));
+                requestModel = new CreateCourierRequestModel(login, password, faker.lorem().word());
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .body(requestModel)
                 .when()
-                .post("api/v1/courier");
+                .post(API.createCourierPath);
         response.then().assertThat().body("ok", equalTo(true))
                 .and()
                 .statusCode(201);
@@ -42,7 +40,7 @@ public class LoginTest {
                 .header("Content-type", "application/json")
                 .body(loginModel)
                 .when()
-                .post("api/v1/courier/login");
+                .post(API.loginPath);
         loginResponse.then()
                 .statusCode(200)
                 .and()
@@ -51,14 +49,14 @@ public class LoginTest {
     }
 
     @Test
-    @Step("Проверка создания курьера")
+    @Description("Проверка создания курьера")
     public void loginTest() {
         LoginModel loginModel = new LoginModel(login, password);
         Response loginResponse = given()
                 .header("Content-type", "application/json")
                 .body(loginModel)
                 .when()
-                .post("api/v1/courier/login");
+                .post(API.loginPath);
         loginResponse.then()
                 .statusCode(200)
                 .and()
@@ -68,12 +66,12 @@ public class LoginTest {
 
     @Test
     public void incorrectLogin() {
-        LoginModel loginModel = new LoginModel(generateRandomString(10), password);
+        LoginModel loginModel = new LoginModel(faker.lorem().word(), password);
         Response incorrectResponse = given()
                 .header("Content-type", "application/json")
                 .body(loginModel)
                 .when()
-                .post("api/v1/courier/login");
+                .post(API.loginPath);
         incorrectResponse.then()
                 .statusCode(404)
                 .and()
@@ -83,12 +81,12 @@ public class LoginTest {
 
     @Test
     public void invorrectPassword() {
-        LoginModel loginModel = new LoginModel(login, generateRandomString(10));
+        LoginModel loginModel = new LoginModel(login, faker.lorem().word());
         Response incorrectResponse = given()
                 .header("Content-type", "application/json")
                 .body(loginModel)
                 .when()
-                .post("api/v1/courier/login");
+                .post(API.loginPath);
         incorrectResponse.then()
                 .statusCode(404)
                 .and()
@@ -97,12 +95,12 @@ public class LoginTest {
 
     @Test
     public void userDesNotExist() {
-        LoginModel loginModel = new LoginModel(generateRandomString(10), generateRandomString(10));
+        LoginModel loginModel = new LoginModel(faker.lorem().word(), faker.lorem().word());
         Response incorrectResponse = given()
                 .header("Content-type", "application/json")
                 .body(loginModel)
                 .when()
-                .post("api/v1/courier/login");
+                .post(API.loginPath);
         incorrectResponse.then()
                 .statusCode(404)
                 .and()
@@ -115,19 +113,11 @@ public class LoginTest {
         Response deleteResponse = given()
                 .header("Content-type", "application/json")
                 .when()
-                .delete("/api/v1/courier/" + id);
+                .delete(API.deleteCourierPath + id);
         deleteResponse.then().statusCode(200);
 
     }
-
-    public static String generateRandomString(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            int index = RANDOM.nextInt(CHARACTERS.length());
-            sb.append(CHARACTERS.charAt(index));
-        }
-        return sb.toString();
-    }
+    
 }
 
 
